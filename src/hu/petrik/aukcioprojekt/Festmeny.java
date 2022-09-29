@@ -1,6 +1,7 @@
 package hu.petrik.aukcioprojekt;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Festmeny {
     private static final int KEZDETEI_LICIT = 100;
@@ -56,13 +57,20 @@ public class Festmeny {
     }
 
     public void licit() {
+        this.licit(10);
+    }
+
+    public void licit(int mertek) {
+        if (mertek < 10 || mertek > 100) {
+            throw new IllegalArgumentException("A licit mértéke 10 és 100 % közé kell hogy essen");
+        }
         if (this.elkelt) {
             throw new RuntimeException("A festmény már elkelt");
         }
         if (this.licitekSzama == 0) {
             this.legmagasabbLicit = KEZDETEI_LICIT;
         } else {
-            int ujLicit = (int) (this.legmagasabbLicit * 1.1);
+            int ujLicit = (int) (this.legmagasabbLicit * (1 + mertek / 100.0));
             this.legmagasabbLicit = getVeglegesLicitMatematikaiMuveletekkel(ujLicit);
         }
         this.licitekSzama++;
@@ -81,14 +89,27 @@ public class Festmeny {
     private int getVeglegesLicitStringgeAlakitassal(int ujLicit) {
         String szovegesLicit = String.valueOf(ujLicit);
         int hossz = szovegesLicit.length();
-        StringBuilder builder = new StringBuilder(szovegesLicit.substring(0,2));
+        StringBuilder builder = new StringBuilder(szovegesLicit.substring(0, 2));
         for (int i = 0; i < hossz - 2; i++) {
             builder.append(0);
         }
         return Integer.parseInt(builder.toString());
     }
 
-    public void licit(int mertek) {
-        // TODO: eljárás megvalósítása
+    @Override
+    public String toString() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String festmenyAdatai = String.format("%s: %s (%s)",
+                this.festo, this.cim, this.stilus);
+        if (this.licitekSzama > 0) {
+            String licitAdatai = String.format("%s" +
+                    "%d $ - %s (összesen: %d db)",
+                    (this.elkelt) ? "elkelt\n" : "",
+                    this.legmagasabbLicit, this.legutolsoLicitIdeje.format(formatter), this.licitekSzama);
+            festmenyAdatai += "\n" + licitAdatai;
+        } else {
+            festmenyAdatai += "\nMég nem érkezett licit";
+        }
+        return festmenyAdatai;
     }
 }
